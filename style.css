@@ -17,6 +17,10 @@
   color: #abcd58;
 }
 
+h1{
+    font-size: 100px;
+}
+
 div {
   display: inline-block;
   line-height: 1;
