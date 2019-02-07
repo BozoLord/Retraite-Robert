@@ -17,10 +17,10 @@ function makeTimer() {
     if (minutes < "10") { minutes = "0" + minutes; }
     if (seconds < "10") { seconds = "0" + seconds; }
 
-    $("#days").html(days + "<span>Days</span>");
-    $("#hours").html(hours + "<span>Hours</span>");
+    $("#days").html(days + "<span>Jours</span>");
+    $("#hours").html(hours + "<span>Heures</span>");
     $("#minutes").html(minutes + "<span>Minutes</span>");
-    $("#seconds").html(seconds + "<span>Seconds</span>");		
+    $("#seconds").html(seconds + "<span>Secondes</span>");		
 
 }
 
