@@ -26,163 +26,107 @@ function makeTimer() {
 
 setInterval(function() { makeTimer(); }, 1000);
 
-COLORS = ['#2ecc71','#3498db','#e67e22','#e67e22','#e74c3c'];
-TOP_OFFSET = window.innerHeight;
-LEFT_OFFSET = 250;
+/*
+ * decaffeinate suggestions:
+ * DS101: Remove unnecessary use of Array.from
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+const NUM_CONFETTI = 350;
+const COLORS = [[85,71,106], [174,61,99], [219,56,83], [244,92,68], [248,182,70]];
+const PI_2 = 2*Math.PI;
 
-const generateWholeNumber = (min, max) => min + Math.floor(Math.random()*(max - min));
 
-const generateRandomColor = () => COLORS[generateWholeNumber(0,COLORS.length)];
+const canvas = document.getElementById("world");
+const context = canvas.getContext("2d");
+window.w = 0;
+window.h = 0;
 
-class CircularParticle extends React.PureComponent {
+const resizeWindow = function() {
+  window.w = (canvas.width = window.innerWidth);
+  return window.h = (canvas.height = window.innerHeight);
+};
+
+window.addEventListener('resize', resizeWindow, false);
   
-  static SIZE_RANGE = [5, 10];
-  static ROTATION_RANGE = [0, 45];
+window.onload = () => setTimeout(resizeWindow, 0);
 
-  constructor(props) {
-    super(props);
-    const {SIZE_RANGE, ROTATION_RANGE} = CircularParticle;
-    const size = generateWholeNumber(...SIZE_RANGE);
-    this.style = {
-      backgroundColor: generateRandomColor(),
-      width: size,
-      height: size,
-      borderRadius: size,
-      transform: `rotateZ(${generateWholeNumber(...ROTATION_RANGE)}deg)`,
-      left: generateWholeNumber(0, window.innerWidth),
-      top: generateWholeNumber(-TOP_OFFSET, 0)
-    };
+const range = (a,b) => ((b-a)*Math.random()) + a;
+
+const drawCircle = function(x,y,r,style) {
+  context.beginPath();
+  context.arc(x,y,r,0,PI_2,false);
+  context.fillStyle = style;
+  return context.fill();
+};
+
+let xpos = 0.5;
+
+document.onmousemove = e => xpos = e.pageX/w;
+
+window.requestAnimationFrame = (() =>
+  window.requestAnimationFrame       ||
+  window.webkitRequestAnimationFrame ||
+  window.mozRequestAnimationFrame    ||
+  window.oRequestAnimationFrame      ||
+  window.msRequestAnimationFrame     ||
+  (callback => window.setTimeout(callback, 1000 / 60))
+)();
+
+
+class Confetti {
+
+  constructor() {
+    this.style = COLORS[~~range(0,5)];
+    this.rgb = `rgba(${this.style[0]},${this.style[1]},${this.style[2]}`;
+    this.r = ~~range(2,6);
+    this.r2 = 2*this.r;
+    this.replace();
   }
 
-  componentDidMount() {
-    const {left} = this.style;
-    const {ROTATION_RANGE} = CircularParticle;
-    setTimeout(() => {
-      const node = ReactDOM.findDOMNode(this.ref);
-      node.style.top = window.innerHeight + generateWholeNumber(0, TOP_OFFSET) + 'px';
-      node.style.left = left + generateWholeNumber(-LEFT_OFFSET, LEFT_OFFSET) + 'px';
-    },0);
-  }
-  
-  render() {
-    
-    return (
-      <div ref={ref => this.ref = ref} className='particle' style={this.style}/>
-    );
-  }
-}
-
-class SquiggleParticle extends React.PureComponent {
-  
-  static SIZE_RANGE = [15, 45];
-  static ROTATION_RANGE = [-15, 15];
-
-  constructor(props) {
-    super(props);
-    const size = generateWholeNumber(...SquiggleParticle.SIZE_RANGE);
-    this.style = {
-      fill: generateRandomColor(),
-      width: size,
-      height: size,
-      transform: `rotateZ(${generateWholeNumber(...SquiggleParticle.ROTATION_RANGE)}deg)`,
-      left: generateWholeNumber(0, window.innerWidth),
-      top: generateWholeNumber(-TOP_OFFSET, 0)
-    };
+  replace() {
+    this.opacity = 0;
+    this.dop = 0.03*range(1,4);
+    this.x = range(-this.r2,w-this.r2);
+    this.y = range(-20,h-this.r2);
+    this.xmax = w-this.r;
+    this.ymax = h-this.r;
+    this.vx = (range(0,2)+(8*xpos))-5;
+    return this.vy = (0.7*this.r)+range(-1,1);
   }
 
-  componentDidMount() {
-    const {left} = this.style;
-    const {ROTATION_RANGE} = SquiggleParticle;
-    setTimeout(() => {
-      const node = ReactDOM.findDOMNode(this.ref);
-      node.style.top = window.innerHeight + generateWholeNumber(0, TOP_OFFSET) + 'px';
-      node.style.left = left + generateWholeNumber(-LEFT_OFFSET, LEFT_OFFSET) + 'px';
-      node.style.transform = `rotateZ(${generateWholeNumber(...ROTATION_RANGE)}deg)`;
-    },0);
-  }
-
-  render() {
-    return (
-      <svg 
-        ref={ref => this.ref = ref} 
-        className='particle'
-        style={this.style}
-        xmlns="http://www.w3.org/2000/svg" 
-        viewBox="0 0 512 512">
-        <path fill={this.style.fill} d="M428.127,0l-12.716,10.062l12.718-10.06c8.785,11.101,19.716,24.917,19.716,51.051 s-10.932,39.951-19.716,51.053c-7.382,9.331-12.716,16.072-12.716,30.927c0,14.854,5.334,21.594,12.716,30.925   c8.784,11.101,19.716,24.917,19.716,51.05c0,26.135-10.931,39.949-19.715,51.051c-7.383,9.331-12.717,16.072-12.717,30.927   c0,14.855,5.332,21.593,12.711,30.919l-25.435,20.124c-8.781-11.097-19.708-24.909-19.708-51.042 c0-26.135,10.931-39.949,19.715-51.051c7.383-9.331,12.717-16.072,12.717-30.927c0-14.855-5.335-21.595-12.717-30.926 c-8.784-11.101-19.715-24.916-19.715-51.049s10.931-39.95,19.715-51.051c7.383-9.331,12.717-16.072,12.717-30.928 c0-14.855-5.335-21.596-12.718-30.927L428.127,0z"/>
-        </svg>
-    );
-  }
-}
-
-class Particles extends React.PureComponent {
-  
-  render() {
-    let {count: n} = this.props;
-    const particles = [];
-    const types = [SquiggleParticle, CircularParticle, CircularParticle];
-    
-    while(n--) {
-      const Particle = types[generateWholeNumber(0,3)];
-      particles.push(
-        <Particle key={n}/>
-      );
+  draw() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.opacity += this.dop;
+    if (this.opacity > 1) {
+      this.opacity = 1;
+      this.dop *= -1;
     }
-    
-    return (
-      <div className='particles'>
-        {particles}
-      </div>
-    );
+    if ((this.opacity < 0) || (this.y > this.ymax)) { this.replace(); }
+    if (!(0 < this.x && this.x < this.xmax)) {
+      this.x = (this.x + this.xmax) % this.xmax;
+    }
+    return drawCircle(~~this.x,~~this.y,this.r,`${this.rgb},${this.opacity})`);
   }
 }
 
-class App extends React.PureComponent {
-  
-  static id = 1;
 
-  constructor(props) {
-    super(props);
-    
-    this.state = {particles: []}
-  }
+const confetti = (__range__(1, NUM_CONFETTI, true).map((i) => new Confetti));
 
-  clean(id) {
-    this.setState({
-      particles: this.state.particles.filter(_id => _id !== id)
-    });
+window.step = function() {
+  requestAnimationFrame(step);
+  context.clearRect(0,0,w,h);
+  return Array.from(confetti).map((c) => c.draw());
+};
+
+step();
+function __range__(left, right, inclusive) {
+  let range = [];
+  let ascending = left < right;
+  let end = !inclusive ? right : ascending ? right + 1 : right - 1;
+  for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
+    range.push(i);
   }
-  
-  handleOnClick = () => {
-    const id = App.id;
-    App.id++;
-    
-    this.setState({
-      particles: [...this.state.particles, id]
-    });
-    setTimeout(() => {
-      this.clean(id);
-    }, 5000);
-  }
-  
-  render() {
-    const {particles} = this.state;
-    const {innerWidth} = window
-    
-    return (
-      <div className='app'>
-        {particles.map(id => (
-          <Particles key={id} count={Math.floor(innerWidth / 20)}/>
-        ))}
-        <div className='button' onClick={this.handleOnClick}>
-          <div className='popper'/>
-          CLICK ME!</div>
-      </div>
-    );
-  }
+  return range;
 }
-
-ReactDOM.render(
-  <App/>,
-  document.body
-);
